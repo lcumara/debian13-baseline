@@ -1,0 +1,20 @@
+# La evidencia puede incluir metadatos internos. Revisar además cada commit.
+evidencias/
+auditoria-debian13-*/
+inventories/produccion/
+secrets/
+installers/
+*.psk
+*.key
+*.p12
+*.pfx
+*.pem
+*.deb
+*.rpm
+*.qcow2
+*.vma*
+*.log
+__pycache__/
+.env
+.env.*
+!*.ejemplo.yml

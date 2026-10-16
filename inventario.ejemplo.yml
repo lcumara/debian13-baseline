@@ -1,0 +1,69 @@
+# Esquema de diseño; todavía no es un inventario consumido por un playbook.
+# No contiene credenciales ni direcciones institucionales.
+baseline:
+  version: "0.1-diseno"
+  os: debian
+  major: 13
+  platform: proxmox-vm
+  architecture: amd64
+  benchmark: "CIS Debian Linux 13 1.1.0"
+  profile_target: "Level 1 Server adaptado; mapeo pendiente"
+  packages_policy: "estables, compatibles y fijados por release validada"
+  timezone: America/La_Paz
+  release_manifest: PENDIENTE
+
+general:
+  ssh_password_transition: pendiente_de_prueba_de_llaves
+  ssh_root_target: disabled
+  ipv6_policy: pendiente_de_diseno
+  admin_networks: []
+  dns_servers: []
+  ntp_servers: []
+  egress_dependencies: []
+  patch_policy: pendiente_de_ventana_y_alertas
+  log_retention: pendiente_de_medicion
+  agent_install_phase: post_personalizacion_pre_produccion
+
+profiles:
+  base:
+    docker: false
+    firewall_design: nftables_sin_borrar_reglas_ajenas
+  docker:
+    docker: true
+    firewall_design: docker_iptables_nft_con_DOCKER_USER
+    # Es una etiqueta de diseño; no es un parámetro para Docker.
+    native_nftables_backend: false
+    published_ports: []
+
+hosts:
+  vm_ejemplo:
+    lifecycle: laboratorio
+    profiles: [base]
+    fqdn: servidor.example.invalid
+    ip_addresses: []
+    application_owner: PENDIENTE
+    application_flows: []
+    backup_policy: PENDIENTE
+    wazuh:
+      version: PENDIENTE_COMPATIBILIDAD_MANAGER
+      manager: PENDIENTE
+      groups: []
+      agent_name: servidor.example.invalid
+      credential_reference: PENDIENTE_ALMACEN_EXTERNO
+    zabbix:
+      version: PENDIENTE_COMPATIBILIDAD_SERVER_PROXY
+      mode: active
+      server_active: PENDIENTE
+      hostname: servidor.example.invalid
+      psk_identity: PENDIENTE_UNICA
+      psk_secret_reference: PENDIENTE_ALMACEN_EXTERNO
+    fortiedr:
+      build: PENDIENTE_SOPORTE_KERNEL
+      installer_reference: PENDIENTE_REPOSITORIO_RESTRINGIDO
+      tenant: PENDIENTE
+      group: PENDIENTE
+    gdata:
+      status: BLOQUEADO_HASTA_CONFIRMAR_SOPORTE_DEBIAN13
+      product_build: PENDIENTE
+      management_server: PENDIENTE
+    exceptions: []
