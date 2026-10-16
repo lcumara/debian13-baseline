@@ -15,7 +15,7 @@ Consulta: 16/10/2026. Se priorizaron documentación de fabricantes, Debian y rep
 
 La mejora institucional será la integración verificable de identidad, perfiles, agentes, reversión y operación. No se afirma superioridad frente a esos proyectos sin resultados comparables. La búsqueda no identificó un proyecto que pudiera darse por validado para toda esta combinación concreta de Proxmox, Docker, G DATA, FortiEDR y agentes institucionales.
 
-No se descargó ni auditó exhaustivamente todo el código de estos proyectos, no se probó su ejecución y no se establece una recomendación de producción basada solo en el README. Antes de reutilizar: revisar licencia, dependencias, mantenimiento, issues relevantes, pruebas de Debian 13 y privilegios; fijar commit y verificar lo que ejecuta.
+Se descargó Ansible Lockdown DEBIAN13-CIS 1.0.3, commit `f9d8dbf5ecdbe0b4955209b4f35d67a727d95052`, y se revisaron entradas, variables, tareas preliminares, tareas de red y acciones posteriores. No se auditó exhaustivamente ni se probó su ejecución. Los demás proyectos se revisaron como referencias documentales. Antes de reutilizar: revisar licencia, dependencias, mantenimiento, issues relevantes, pruebas de Debian 13 y privilegios; fijar commit y verificar lo que ejecuta. Véase [incorporación de CIS](08-reutilizar-cis.md).
 
 ## Referencias técnicas consultadas
 
@@ -41,6 +41,9 @@ No se descargó ni auditó exhaustivamente todo el código de estos proyectos, n
 20. [Docker backend nftables](https://docs.docker.com/engine/network/firewall-nftables/): estado experimental, forwarding y tablas propias.
 21. [Docker seguridad](https://docs.docker.com/engine/security/): autoridad del daemon, namespaces y privilegios.
 22. [AIDE en Trixie](https://manpages.debian.org/trixie/aide/aide.1.en.html): operación y resultados de comprobación.
+23. [Kernel sysctl](https://docs.kernel.org/admin-guide/sysctl/kernel.html) y [filesystem sysctl](https://docs.kernel.org/admin-guide/sysctl/fs.html): efecto de los cinco parámetros del ejecutor piloto.
+24. [Zabbix Agent 2, CLI](https://www.zabbix.com/documentation/7.4/en/manpages/zabbix_agent2): validación del archivo mediante `-T`.
+25. [Ansible Lockdown release 1.0.3](https://github.com/ansible-lockdown/DEBIAN13-CIS/releases/tag/1.0.3): referencia versionada para revisión, no ejecución automática.
 
 ## Evidencia local y límites
 

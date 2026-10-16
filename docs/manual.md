@@ -1,5 +1,7 @@
 # Manual de diseño y preparación de la base Debian 13
 
+> Documento de diseño de referencia. Para ejecutar el piloto actual, comienza por [la guía operativa numerada](01-laboratorio.md); consulta el [estado de implementación](../CHANGELOG.md).
+
 **Estado:** propuesta de ingeniería, edición 0.1. Alcance confirmado: VM Proxmox; algunas VM incorporarán Docker. Fecha de consulta: 16/10/2026, America/La_Paz.
 
 ## 1. Objetivo mejorado
