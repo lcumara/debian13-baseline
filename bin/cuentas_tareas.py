@@ -11,7 +11,7 @@ import tempfile
 import baseline as core
 import configurar_base as base
 
-DEFAULTS = {'PASS_MAX_DAYS': '365', 'PASS_MIN_DAYS': '1', 'PASS_WARN_AGE': '7',
+DEFAULTS = {'PASS_MAX_DAYS': '3650', 'PASS_MIN_DAYS': '1', 'PASS_WARN_AGE': '365',
             'UMASK': '027', 'ENCRYPT_METHOD': 'YESCRYPT'}
 CRON = {'/etc/crontab': 0o600, **{f'/etc/cron.{part}': 0o700
         for part in ('d', 'hourly', 'daily', 'weekly', 'monthly')}}
@@ -67,7 +67,10 @@ def apply():
             base.remember(folder, state, '/etc/default/useradd', 'cuentas')
             base.put(folder, state, '/etc/login.defs', text, 'cuentas')
             base.put(folder, state, '/etc/profile.d/90-baseline-umask.sh', PROFILE, 'cuentas')
-            core.run(['useradd', '-D', '-f', '30'])
+            core.run(['useradd', '-D', '-f', '-1'])
+            base.put(folder, state, '/etc/cron.daily/baseline-password-review',
+                     Path(__file__).with_name('revisar_edades.py').read_text(encoding='utf-8'),
+                     'cuentas', 0o700)
             for path, mode in CRON.items():
                 Path(path).chmod(mode)
             state['estado'] = 'APLICADO'
@@ -92,7 +95,10 @@ def verify():
     for key, value in DEFAULTS.items():
         check(key + '_cuentas_nuevas', lambda k=key, v=value: re.findall(
             rf'(?m)^[ \t]*{k}[ \t]+(\S+)', text) == [v])
-    check('inactividad_cuentas_nuevas', lambda: 'INACTIVE=30' in core.run(['useradd', '-D']).splitlines())
+    check('inactividad_cuentas_nuevas', lambda: 'INACTIVE=-1' in core.run(['useradd', '-D']).splitlines())
+    check('revision_cinco_anos_instalada', lambda: Path('/etc/cron.daily/baseline-password-review').read_text(encoding='utf-8')
+          == Path(__file__).with_name('revisar_edades.py').read_text(encoding='utf-8')
+          and Path('/etc/cron.daily/baseline-password-review').stat().st_mode & 0o7777 == 0o700)
     check('umask_shell_configurada', lambda: Path('/etc/profile.d/90-baseline-umask.sh').read_text() == PROFILE)
     for path, mode in CRON.items():
         check(path, lambda p=path, m=mode: not Path(p).is_symlink()
@@ -110,7 +116,7 @@ def main(argv=None):
         g.add_argument('--' + name, action='store_true')
     a = p.parse_args(argv)
     if not any(vars(a).values()):
-        print('PLAN: cuentas nuevas 365/1/7 días, inactividad 30, umask 027, permisos cron. Sin cambios.')
+        print('PLAN: cuentas nuevas 3650/1/365 días, sin bloqueo adicional por inactividad; revisión informativa a 1825 días, umask 027, permisos cron. Sin cambios.')
         return 0
     try:
         core.environment()
