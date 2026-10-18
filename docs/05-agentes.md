@@ -16,7 +16,7 @@
 ```bash
 hostname -f
 uname -r
-chronyc tracking
+timedatectl show -p NTP -p NTPSynchronized
 dpkg-query -W -f='${Package}\t${Version}\n' > /tmp/paquetes-piloto.txt
 ```
 

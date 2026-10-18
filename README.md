@@ -4,6 +4,8 @@
 
 **Si estás continuando el piloto con contraseña SSH y sin snapshot, usa [9. Aplicar la base en bloque](docs/09-base-en-bloque.md).** Incluye los ajustes acordados durante la configuración y una comprobación al final.
 
+**Si ya completaste el capítulo 9, continúa por [10. Completar PAM, registros y auditoría](docs/10-completar-base.md).** Incluye instalación, aplicación agrupada y recuperación temporal para comprobar una nueva sesión SSH.
+
 Para una instalación nueva desde cero, empieza por [1. Preparar el laboratorio](docs/01-laboratorio.md).
 
 > Edición 0.3: perfil general agrupado. Algunos controles se probaron manualmente en la VM con el usuario; el nuevo ejecutor completo tiene pruebas locales simuladas y necesita validación en Debian. No es una implementación CIS completa ni una imagen ya sellada.
@@ -34,6 +36,7 @@ flowchart LR
 | [7. Aceptación](docs/07-aceptacion-operativa.md) | Evidencias, restauración y entrega del servidor |
 | [8. Incorporar CIS](docs/08-reutilizar-cis.md) | Reutilizar Ansible Lockdown con versión fija y controles revisados |
 | [9. Base en bloque](docs/09-base-en-bloque.md) | Aplicar el perfil con contraseña, sin Chrony ni snapshot ficticio, y comprobar al final |
+| [10. Completar controles](docs/10-completar-base.md) | PAM local, historial y bloqueo, rsyslog, needrestart, auditoría y restricciones adicionales |
 
 Cada capítulo indica **objetivo, dónde ejecutar, comandos, resultado esperado y qué hacer si falla**. Los nombres `IP_LAB`, `IP_ADMIN`, `FQDN_REAL...` son datos que debes sustituir.
 

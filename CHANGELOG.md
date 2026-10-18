@@ -47,3 +47,10 @@ No se cambió ninguna VM ni se verificó un score CIS real durante esta edición
 ## 0.1 — Diseño y diagnóstico
 
 Investigación inicial, revisión del script aportado, modelo de inventario, catálogo de aceptación y recopilador de diagnóstico de solo lectura.
+# Complemento del piloto — 2026-10-18
+
+- Añade `completar_base.py` y capítulo 10: PAM para cuentas locales (calidad, historial, yescrypt y bloqueo), rsyslog, needrestart, restricciones core/red y auditoría adicional.
+- Recuperación temporal de archivos y valores sysctl; confirmación tras nueva sesión SSH. No desinstala paquetes ni garantiza recuperación ante apagado.
+- Rechaza proveedores PAM no reconocidos; no instala Chrony ni modifica routing para Docker.
+- 35 pruebas unitarias locales pasan, incluidas 9 nuevas. Sin ejecución Linux local: PAM, reinicio, logs y cambios de contraseña requieren las pruebas funcionales del capítulo 10 en la VM.
+- No declara CIS completo. Registra controles pendientes y aclara que la ruta Cloud-Init no corresponde al clonado manual elegido.
