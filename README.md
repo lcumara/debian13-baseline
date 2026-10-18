@@ -2,6 +2,8 @@
 
 **Objetivo:** preparar una base común, convertirla en plantilla y crear servidores con identidad, agentes y seguridad propios para su función.
 
+**Para el encargado de infraestructura:** comenzar por [Operación: estado, firewall, servicios y recuperación](docs/00-operacion-infraestructura.md). Es la guía de administración de una VM ya configurada; no hace falta repetir la instalación.
+
 **Si estás continuando el piloto con contraseña SSH y sin snapshot, usa [9. Aplicar la base en bloque](docs/09-base-en-bloque.md).** Incluye los ajustes acordados durante la configuración y una comprobación al final.
 
 **Si ya completaste el capítulo 9, continúa por [10. Completar PAM, registros y auditoría](docs/10-completar-base.md).** Incluye instalación, aplicación agrupada y recuperación temporal para comprobar una nueva sesión SSH.
@@ -40,6 +42,7 @@ flowchart LR
 | [11. Cuentas y cron](docs/11-cuentas-tareas.md) | Política para cuentas nuevas y permisos de cron, con recuperación |
 | [12. Firewall](docs/12-firewall.md) | Entrada IPv4/IPv6 con SSH/22 y recuperación temporal |
 | [13. Cierre pendiente](docs/13-cierre-pendiente.md) | Lista consolidada de lo que falta, excepciones y trabajo por clon |
+| [14. Preparación de sellado manual](docs/14-preparar-sellado-manual.md) | Comprobaciones antes de limpiar identidades y preparar clones |
 
 Cada capítulo indica **objetivo, dónde ejecutar, comandos, resultado esperado y qué hacer si falla**. Los nombres `IP_LAB`, `IP_ADMIN`, `FQDN_REAL...` son datos que debes sustituir.
 
