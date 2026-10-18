@@ -4,7 +4,7 @@
 
 **Dónde:** primero VM de preparación; luego Proxmox; finalmente cada clon aislado.
 
-**Piloto actual:** se eligió personalización manual, sin Cloud-Init. Las secciones 4.2–4.5 describen otra ruta: no ejecutes su limpieza sobre el piloto manual. El sellado manual con regeneración de identidades todavía está pendiente de implementación y prueba. Los agentes podrán preinstalarse únicamente cuando se haya resuelto su compatibilidad y preparación sin identidad; su registro será por clon.
+**Piloto actual:** se eligió personalización manual, sin Cloud-Init. Las secciones 4.2–4.5 describen otra ruta: no ejecutes su limpieza sobre el piloto manual. Usa el [capítulo 14](14-preparar-sellado-manual.md) para el ejecutor de sellado técnico y las pruebas reales en dos clones, todavía pendientes. Los agentes podrán preinstalarse únicamente cuando se haya resuelto su compatibilidad y preparación sin identidad; su registro será por clon.
 
 ## 4.1 Qué pertenece a cada etapa
 

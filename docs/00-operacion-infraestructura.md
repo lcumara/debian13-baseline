@@ -113,4 +113,6 @@ Los parámetros internos `--cargar` y `--vencer` del firewall son para el servic
 
 ## Alcance y entrega
 
+El sellado técnico tiene comandos propios, documentados en el [capítulo 14](14-preparar-sellado-manual.md): `sudo python3 bin/sellar_identidad.py --comprobar` y, únicamente al terminar la preparación, `sudo python3 bin/sellar_identidad.py --sellar-y-apagar`. El segundo elimina identidades y apaga la VM. No es un comando de mantenimiento de servidores productivos.
+
 Los verificadores compartidos por el operador pasaron después de reinicios. Las pruebas funcionales completas, la evaluación CIS por ID y el sellado manual no están todos concluidos. Ver [13. Cierre pendiente](13-cierre-pendiente.md). No etiquetar esta imagen como CIS certificada ni ya aprobada para producción.
