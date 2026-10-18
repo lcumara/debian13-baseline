@@ -7,6 +7,24 @@ import firewall_base as fw
 
 
 class FirewallTests(unittest.TestCase):
+    def test_rejects_bad_ports_and_injected_origins(self):
+        for port, origin in [(22, 'cualquiera'), (0, 'cualquiera'), (65536, 'cualquiera'),
+                             (5432, ''), (5432, '0.0.0.0/0; flush ruleset'), (5432, '192.0.2.4/24')]:
+            with self.assertRaises(ValueError):
+                fw.port_entry(port, origin)
+
+    def test_scoped_rules_precede_final_drop_and_preserve_ssh(self):
+        state = {'permisos_tcp': [fw.port_entry(5432, '192.0.2.10'), fw.port_entry(443, '2001:db8::/64')]}
+        rules = fw.render(state)
+        self.assertIn('ip saddr 192.0.2.10/32 tcp dport 5432', rules)
+        self.assertIn('ip6 saddr 2001:db8::/64 tcp dport 443', rules)
+        self.assertLess(rules.index('tcp dport 5432'), rules.rindex('counter drop'))
+        self.assertIn('tcp dport 22', rules)
+
+    def test_public_permission_requires_explicit_origin(self):
+        rules = fw.render({'permisos_tcp': [fw.port_entry(443, 'cualquiera')]})
+        self.assertIn('        tcp dport 443 ct state new counter accept', rules)
+
     def test_plan_does_not_apply(self):
         with patch.object(fw, 'apply') as apply, patch.object(fw.core, 'environment') as env:
             self.assertEqual(fw.main([]), 0)

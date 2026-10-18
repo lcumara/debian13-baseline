@@ -37,6 +37,52 @@ Después de confirmar puedes reiniciar y repetir la verificación. Prueba desde 
 
 ## Recuperar
 
+## Abrir servicios después de clonar
+
+Actualiza el repositorio del clon. No repitas `--aplicar`: el firewall ya existe.
+
+```bash
+cd ~/trabajo/debian13-baseline
+git -c credential.helper= pull --ff-only
+```
+
+Ejemplos: ejecutar solo los correspondientes a servicios reales. HTTPS público en IPv4 e IPv6:
+
+```bash
+sudo python3 bin/firewall_base.py --permitir-tcp 443 --origen cualquiera
+```
+
+HTTP, si el despliegue lo requiere (redirección o validación de certificados):
+
+```bash
+sudo python3 bin/firewall_base.py --permitir-tcp 80 --origen cualquiera
+```
+
+PostgreSQL, únicamente desde la IP de la aplicación. El dato se introduce localmente, no se comparte en el chat:
+
+```bash
+read -r -p 'IP o red CIDR autorizada de la aplicación: ' RED_APP
+sudo python3 bin/firewall_base.py --permitir-tcp 5432 --origen "$RED_APP"
+```
+
+Usar 3306 para MySQL/MariaDB si corresponde. Una IP IPv4 autoriza únicamente esa familia; para IPv6 añadir su IP/red explícitamente. Los permisos son acumulativos: agregar un origen restringido no elimina un permiso previo para `cualquiera`.
+
+Para retirar exactamente un permiso:
+
+```bash
+sudo python3 bin/firewall_base.py --cerrar-tcp 5432 --origen "$RED_APP"
+sudo python3 bin/firewall_base.py --verificar
+sudo nft list table inet baseline_host
+```
+
+Las conexiones ya establecidas pueden seguir hasta cerrarse. Estos comandos no permiten modificar SSH/22. Guardan permisos de forma privada en el estado y actualizan el ejecutor de arranque; comprueban sintaxis y reemplazan solo la tabla propia mediante una transacción nft. El verificador comprueba presencia del puerto, no prueba exhaustivamente origen/destino; comprobar desde un origen permitido y otro no permitido y después de reiniciar. Al producirse un error se intenta restaurar la política previa.
+
+Abrir el firewall no instala el servicio ni configura autenticación, TLS o la interfaz de escucha de la base de datos. Si aplicación y base se comunican por localhost o socket Unix, no abras el puerto de la base a la red. Los backends detrás de un proxy local tampoco necesitan un puerto público propio.
+
+**Docker:** estos permisos cubren INPUT del host. Un puerto publicado por Docker normalmente utiliza FORWARD y sus reglas propias; no asumir que este bloqueo lo protege. Para un backend accesible solo por un proxy local, publicar explícitamente en loopback, por ejemplo `127.0.0.1:8080:8080`, y verificar el despliegue real. Las bases entre contenedores pueden usar una red interna sin publicar el puerto al host. El perfil Docker completo sigue pendiente.
+
+## Recuperación del firewall completo
+
 ```bash
 sudo python3 bin/firewall_base.py --restaurar
 ```

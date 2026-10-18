@@ -39,6 +39,7 @@ flowchart LR
 | [10. Completar controles](docs/10-completar-base.md) | PAM local, historial y bloqueo, rsyslog, needrestart, auditoría y restricciones adicionales |
 | [11. Cuentas y cron](docs/11-cuentas-tareas.md) | Política para cuentas nuevas y permisos de cron, con recuperación |
 | [12. Firewall](docs/12-firewall.md) | Entrada IPv4/IPv6 con SSH/22 y recuperación temporal |
+| [13. Cierre pendiente](docs/13-cierre-pendiente.md) | Lista consolidada de lo que falta, excepciones y trabajo por clon |
 
 Cada capítulo indica **objetivo, dónde ejecutar, comandos, resultado esperado y qué hacer si falla**. Los nombres `IP_LAB`, `IP_ADMIN`, `FQDN_REAL...` son datos que debes sustituir.
 

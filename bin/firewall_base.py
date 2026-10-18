@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Firewall de entrada para plantilla SSH/22; no gestiona forwarding Docker."""
 import argparse
+import ipaddress
 import json
 from pathlib import Path
 import re
@@ -49,15 +50,68 @@ def exists():
     return f'table inet {TABLE}' in core.run(['nft', 'list', 'tables']).splitlines()
 
 
-def transaction(present):
-    return (f'delete table inet {TABLE}\n' if present else '') + RULES
+def port_entry(port, origin):
+    if not isinstance(port, int) or not 1 <= port <= 65535 or port == 22:
+        raise ValueError('Puerto adicional entre 1 y 65535, distinto de SSH/22')
+    if not origin:
+        raise ValueError('Indicar --origen IP/CIDR o --origen cualquiera explícitamente')
+    origin = 'cualquiera' if origin == 'cualquiera' else str(ipaddress.ip_network(origin, strict=True))
+    return {'puerto': port, 'origen': origin}
 
 
-def install_rules(folder):
+def render(state=None):
+    extra = []
+    for item in (state or {}).get('permisos_tcp', []):
+        entry = port_entry(item['puerto'], item['origen'])
+        source = ''
+        if entry['origen'] != 'cualquiera':
+            net = ipaddress.ip_network(entry['origen'])
+            source = f'{"ip" if net.version == 4 else "ip6"} saddr {net} '
+        extra.append(f'        {source}tcp dport {entry["puerto"]} ct state new counter accept\n')
+    return RULES.replace('        counter drop\n', ''.join(extra) + '        counter drop\n')
+
+
+def transaction(present, state=None):
+    return (f'delete table inet {TABLE}\n' if present else '') + render(state)
+
+
+def install_rules(folder, state=None):
     batch = folder / 'load.nft'
-    core.atomic_write(batch, transaction(exists()).encode())
+    core.atomic_write(batch, transaction(exists(), state).encode())
     core.run(['nft', '-c', '-f', str(batch)])
     core.run(['nft', '-f', str(batch)])
+
+
+def change_port(port, origin, remove=False):
+    entry = port_entry(port, origin)
+    with core.locked():
+        folder, state = latest()
+        if state['estado'] != 'CONFIRMADO':
+            raise ValueError('Primero confirmar el firewall base')
+        old = json.loads(json.dumps(state))
+        entries = state.setdefault('permisos_tcp', [])
+        if remove:
+            if entry not in entries:
+                raise ValueError('No existe ese permiso exacto de puerto y origen')
+            entries.remove(entry)
+        elif entry not in entries:
+            entries.append(entry)
+        # Upgrade the private boot helper so permissions survive reboot.
+        helper = folder / 'firewall_base.py'
+        previous_helper = helper.read_bytes()
+        core.atomic_write(folder / 'state-before-port.json', json.dumps(old).encode())
+        try:
+            core.atomic_write(helper, Path(__file__).read_bytes())
+            save(folder, state)
+            install_rules(folder, state)
+        except Exception:
+            save(folder, old)
+            core.atomic_write(helper, previous_helper)
+            install_rules(folder, old)
+            raise
+    print('Permiso TCP actualizado y persistente. SSH/22 no se modifica.')
+    if remove:
+        print('Las conexiones ya establecidas pueden continuar hasta cerrarse; no se borra conntrack.')
 
 
 def restore(folder, state):
@@ -130,6 +184,9 @@ def verify():
     checks['ssh_22'] = 'tcp dport 22' in rules
     checks['establecidas'] = 'ct state established,related' in rules
     checks['ipv6_icmp'] = 'ipv6-icmp' in rules
+    for entry in state.get('permisos_tcp', []):
+        # Port presence only; full source and packet tests are operator checks.
+        checks['puerto_tcp_' + str(entry['puerto'])] = f'tcp dport {entry["puerto"]} ' in rules
     for name, ok in checks.items():
         print(('OK       ' if ok else 'REVISAR  ') + name)
     print('Entrada del host solamente; salida permitida y forwarding Docker pendiente por función.')
@@ -141,8 +198,13 @@ def main(argv=None):
     g = p.add_mutually_exclusive_group()
     for flag in ('aplicar', 'confirmar', 'restaurar', 'verificar', 'cargar', 'vencer'):
         g.add_argument('--' + flag, action='store_true')
+    g.add_argument('--permitir-tcp', type=int, metavar='PUERTO')
+    g.add_argument('--cerrar-tcp', type=int, metavar='PUERTO')
+    p.add_argument('--origen', default='', metavar='IP_O_CIDR')
     a = p.parse_args(argv)
-    if not any(vars(a).values()):
+    if a.origen and a.permitir_tcp is None and a.cerrar_tcp is None:
+        p.error('--origen requiere --permitir-tcp o --cerrar-tcp')
+    if not any(vars(a).values()) and a.permitir_tcp is None and a.cerrar_tcp is None:
         print('PLAN: entrada deny por defecto, SSH/22, ICMP/ICMPv6, DHCP, loopback y conexiones establecidas. Sin cambios.')
         return 0
     try:
@@ -151,12 +213,15 @@ def main(argv=None):
             apply()
         elif a.verificar:
             return verify()
+        elif a.permitir_tcp is not None or a.cerrar_tcp is not None:
+            change_port(a.permitir_tcp if a.permitir_tcp is not None else a.cerrar_tcp,
+                        a.origen, remove=a.cerrar_tcp is not None)
         elif a.cargar:
             # Called synchronously by systemd while apply holds the global lock.
             folder, state = latest()
             if state['estado'] not in ('PENDIENTE', 'CONFIRMADO'):
                 raise ValueError('El perfil está revertido')
-            install_rules(folder)
+            install_rules(folder, state)
         else:
             with core.locked():
                 folder, state = latest()
