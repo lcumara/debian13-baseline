@@ -1,5 +1,22 @@
 # Cambios y validación
 
+## 0.3 — 18/10/2026 — Perfil general agrupado
+
+- Nuevo `bin/configurar_base.py` y capítulo 9: configuración por etapas, verificación final y registro explícito de ausencia de snapshot.
+- Conserva NTP existente y contraseña SSH según decisión del operador. Evita recomendaciones opcionales y eliminaciones APT. No instala Chrony, agentes, Docker ni BD en la base.
+- Amplía reglas audit para autenticación/configuración; incorpora rotación, journal persistente limitado, sudo con pseudoterminal/log, actualizaciones automáticas de seguridad sin reboot automático, Fail2ban y política AIDE propia con timer diario.
+- Valida SSH efectivo para usuario/IP y programa una reversión a los 20 minutos; requiere confirmar desde una conexión nueva. No promete que el timer sobreviva a un reinicio.
+- No aplica un firewall general, no modifica PAM/GRUB/red ni fuerza perfiles AppArmor. Las políticas por función siguen pendientes antes de producción. No sella la VM ni inicializa una base AIDE destinada a heredarse entre clones.
+- El verificador distingue comprobaciones locales del envío de alertas, pruebas funcionales y aceptación. No entrega score CIS.
+
+### Evidencia del piloto y límites
+
+El operador reportó en Debian 13.7 amd64: instalación de paquetes sin Chrony/recomendaciones; servicios activos y hora sincronizada; ocho reglas de identidad, un evento de prueba y persistencia tras reinicio; recarga exitosa de retención audit; kptr_restrict=2 aplicado/guardado; Fail2ban leyendo journal y prueba manual de ban/unban reflejada en nftables. Esto valida esas acciones manuales, no el nuevo ejecutor completo. No se publican nombres, IP ni registros del servidor.
+
+26 pruebas unitarias locales pasaron (las 14 anteriores y 12 nuevas). Las nuevas cubren plan sin efectos, ausencia de snapshot no ficticia, validación de contexto SSH, duplicados de auditd, rutas existentes, variantes de arquitectura, configuración SSH efectiva, temporizador antes de escrituras, recuperación ante error y aislamiento de grupos de respaldo. Los comandos del sistema se simulan; el temporizador, AIDE, servicios y APT requieren validación Linux real.
+
+Persisten límites: no se ejecutó esta automatización completa en una VM desde el entorno de desarrollo; los backups son locales y no revierten paquetes; la configuración preparada de AIDE necesita referencia por clon; el firewall por función, sellado, identidades y agentes tienen aceptación separada.
+
 ## 0.2 — 16/10/2026 — Piloto operativo
 
 - Portada con un único recorrido de ocho capítulos: laboratorio, base, acceso/red, plantilla/clones, agentes, Docker, aceptación e incorporación de CIS.

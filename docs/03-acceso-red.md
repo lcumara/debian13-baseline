@@ -1,5 +1,7 @@
 # 3. Proteger acceso y red
 
+> Este capítulo describe el perfil por llave. Para el perfil acordado con **contraseña**, usa [9. Base en bloque](09-base-en-bloque.md); no ejecutes aquí el bloque que establece `PasswordAuthentication no`.
+
 **Objetivo:** administración por llave y acceso a servicios solo desde redes autorizadas.
 
 **Dónde:** VM de laboratorio. Mantén abierta la consola de Proxmox durante esta etapa.

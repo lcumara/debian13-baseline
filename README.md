@@ -2,9 +2,11 @@
 
 **Objetivo:** preparar una base común, convertirla en plantilla y crear servidores con identidad, agentes y seguridad propios para su función.
 
-**Empieza por [1. Preparar el laboratorio](docs/01-laboratorio.md).** Sigue un capítulo cada vez; no necesitas leer todo antes de comenzar.
+**Si estás continuando el piloto con contraseña SSH y sin snapshot, usa [9. Aplicar la base en bloque](docs/09-base-en-bloque.md).** Incluye los ajustes acordados durante la configuración y una comprobación al final.
 
-> Edición 0.2: guía operativa y primer ejecutor para laboratorio. Código probado con simulaciones locales; pendiente de validación en una VM Debian 13. No es todavía una plantilla aprobada ni una implementación CIS completa.
+Para una instalación nueva desde cero, empieza por [1. Preparar el laboratorio](docs/01-laboratorio.md).
+
+> Edición 0.3: perfil general agrupado. Algunos controles se probaron manualmente en la VM con el usuario; el nuevo ejecutor completo tiene pruebas locales simuladas y necesita validación en Debian. No es una implementación CIS completa ni una imagen ya sellada.
 
 ## El recorrido
 
@@ -31,10 +33,15 @@ flowchart LR
 | [6. Docker](docs/06-docker.md) | Perfil específico de contenedores y red |
 | [7. Aceptación](docs/07-aceptacion-operativa.md) | Evidencias, restauración y entrega del servidor |
 | [8. Incorporar CIS](docs/08-reutilizar-cis.md) | Reutilizar Ansible Lockdown con versión fija y controles revisados |
+| [9. Base en bloque](docs/09-base-en-bloque.md) | Aplicar el perfil con contraseña, sin Chrony ni snapshot ficticio, y comprobar al final |
 
 Cada capítulo indica **objetivo, dónde ejecutar, comandos, resultado esperado y qué hacer si falla**. Los nombres `IP_LAB`, `IP_ADMIN`, `FQDN_REAL...` son datos que debes sustituir.
 
 ## Qué puede ejecutar hoy
+
+**Ruta actual recomendada para el piloto en curso:** `bin/configurar_base.py`, documentado en el capítulo 9. No mezclar su configuración SSH con el perfil por llave del capítulo 3. La base AIDE se inicializa por clon y el sellado se realiza como operación final separada.
+
+Los comandos siguientes corresponden al **ejecutor inicial 0.2**, que conserva requisitos y alcance distintos:
 
 Desde la carpeta del proyecto, estos comandos solo muestran el plan:
 

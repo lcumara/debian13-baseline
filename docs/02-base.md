@@ -1,5 +1,7 @@
 # 2. Instalar y comprobar la seguridad común
 
+> Piloto actualizado con contraseña SSH y sin acceso a snapshots: seguir [9. Base en bloque](09-base-en-bloque.md). Esa ruta conserva el cliente NTP y evita instalar recomendaciones de correo; sustituye los comandos de aplicación de este capítulo para ese perfil.
+
 **Objetivo:** preparar los componentes comunes y aplicar un primer grupo de controles verificables.
 
 **Dónde:** únicamente la VM Debian 13 de laboratorio. Ejecuta una sección cada vez.
