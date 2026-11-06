@@ -37,7 +37,7 @@ git -c credential.helper= pull --ff-only
 python3 bin/configurar_base.py
 ```
 
-Si Git pide acceso, usa `lcumara` y el token de lectura como contraseña. No lo incluyas en la URL ni lo guardes en la imagen. Si el token expiró, genera otro de lectura del mismo repositorio. Si Git indica cambios locales/conflicto, no uses reset/force: conserva los cambios para revisarlos.
+Si Git pide acceso, usa tu usuario de GitHub y el token de lectura como contraseña. No lo incluyas en la URL ni lo guardes en la imagen. Si el token expiró, genera otro de lectura del mismo repositorio. Si Git indica cambios locales/conflicto, no uses reset/force: conserva los cambios para revisarlos.
 
 El último comando imprime el plan; no hace cambios. La carpeta clonada por Git es `debian13-baseline`, no `debian13-baseline-main`.
 

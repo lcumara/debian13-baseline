@@ -4,7 +4,7 @@
 
 **Objetivo:** administración por llave y acceso a servicios solo desde redes autorizadas.
 
-**Dónde:** VM de laboratorio. Mantén abierta la consola de Proxmox durante esta etapa.
+**Dónde:** Servidor Debian 13. Mantén una sesión activa de respaldo durante esta etapa.
 
 ## 3.1 Probar el acceso por llave antes de cerrar contraseñas
 
@@ -32,7 +32,7 @@ sudo -v
 
 ## 3.2 Aplicar un perfil SSH sin túneles
 
-Desde la consola de Proxmox, respalda la configuración. Usa un nombre nuevo si ese respaldo ya existe:
+Antes de aplicar cambios en SSH, respalda la configuración actual:
 
 ```bash
 sudo install -d -m 0700 /root/respaldo-baseline
@@ -100,23 +100,22 @@ Si modificaste otros archivos, recupera sus versiones del respaldo. No cambies p
 | Wazuh | Salida a manager/enrollment | Según configuración real, no asumir puertos universales |
 | EDR/antivirus | Salida a servicios del fabricante/tenant | Según matriz oficial del producto |
 
-Para el piloto aplica primero esta matriz en el firewall de Proxmox o en el firewall de la red. Verifica que realmente esté habilitado en los niveles necesarios del entorno y en la interfaz de la VM. No cambies el firewall del host Proxmox desde scripts de Debian.
+Aplica esta matriz en el firewall perimetral de la red y en el firewall del propio host.
 
-## 3.4 Elegir el firewall del invitado
+## 3.4 Firewall del Servidor (UFW + Fail2ban)
 
-**VM sin Docker:** nftables es el candidato. **VM que tendrá Docker:** sigue [6. Docker](06-docker.md) antes de definir reglas. No lleves una política de forwarding DROP de una plantilla genérica a un host de contenedores sin adaptarla.
+El firewall del host se implementa mediante **UFW** (con backend nativo `iptables-nft`), con IPv6 desactivado y Fail2ban enlazado (`banaction = ufw`).
 
-Inventario de reglas y escuchas:
+La política por defecto es **bloquear todo el tráfico entrante** y permitir el tráfico saliente:
 
 ```bash
-sudo nft list ruleset
-sudo ss -lntup
-sudo systemctl is-active nftables ufw firewalld
+sudo ufw default deny incoming
+sudo ufw default allow outgoing
+sudo ufw allow 22/tcp comment "SSH Administracion"
+sudo ufw enable
 ```
 
-Si hay reglas existentes, identifica quién las administra. Evita que Ansible Lockdown, scripts locales, Docker y un servicio de firewall reescriban la misma política.
-
-**La automatización de firewall queda pendiente del inventario de redes y del perfil.** No se incluye una regla de ejemplo que permita SSH desde todo Internet ni un `flush ruleset`. Hasta validar el firewall del invitado, limita la exposición desde Proxmox/red y mantén el piloto aislado; esta limitación impide declararlo terminado para producción.
+Para la integración con Fail2ban, reglas por rol de servidor (Frontend, Backend, bases de datos) y verificación completa, consulta [12. Firewall UFW](12-firewall-ufw.md).
 
 ## 3.5 Probar desde dos orígenes autorizados para la prueba
 

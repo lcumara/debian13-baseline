@@ -1,5 +1,15 @@
 # Cambios y validación
 
+## 0.5 — 06/11/2026 — Modelo Directo en Dos Partes (General + Específica)
+
+- **Eliminación del modelo de plantillas y clonación:** Supresión de conceptos de plantillas de clones, cloud-init y acoplamiento a hipervisores. El aseguramiento se realiza de forma directa en cada servidor para evitar identidades y secretos duplicados.
+- **Estructuración formal en Dos Partes:**
+  - **Parte 1 (Configuración General):** Línea base homogénea del sistema operativo: endurecimiento de Kernel (`sysctl`), autenticación PAM (`pwquality`, `faillock`), caducidad de contraseñas de servicio a 10 años (`chage`), restricciones de cron y volcado de memoria (`limits.conf: * hard core 0`), auditoría (`auditd`, `rsyslog`), firewall del host (**UFW** con `IPv6=no`) integrado nativamente a **Fail2ban** (`banaction = ufw`) en puerto 22/tcp, y procedimiento de mantenimiento y depuración de kernels obsoletos.
+  - **Parte 2 (Configuración Específica):** Configuración dedicada por servidor: rol de red (Proxy Frontend Nginx con SSL/443, Proxy Backend, etc.), reglas de puertos en UFW, enrolamiento individual de agentes de seguridad y monitoreo (Wazuh Agent con clave única, Zabbix Agent 2 con PSK propia, EDR institucional) e inicialización final de línea base de integridad AIDE.
+- **Reorganización documental:**
+  - Sustitución de `docs/04-plantilla-clones.md` por `docs/04-configuracion-especifica.md`.
+  - Refactorización de `README.md`, `docs/00-operacion-infraestructura.md`, `docs/01-laboratorio.md`, `docs/02-base.md`, `docs/03-acceso-red.md`, `docs/05-agentes.md`, `docs/13-cierre-pendiente.md` y `docs/14-preparar-sellado-manual.md`.
+
 ## 0.4 — 06/11/2026 — Soporte UFW e integración Fail2ban
 
 - Estandarización de Firewall: reemplazo de `firewall_base.py` por **UFW** (usando backend `iptables-nft`), manteniendo `nftables.conf` en configuración limpia por defecto.

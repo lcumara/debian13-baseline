@@ -9,7 +9,7 @@ Este repositorio es privado: su propietario debe conceder acceso al encargado en
 Si `/opt/debian13-baseline` todavía no existe, desde Debian con una cuenta autorizada:
 
 ```bash
-sudo git -c credential.helper= clone https://github.com/lcumara/debian13-baseline.git /opt/debian13-baseline
+sudo git -c credential.helper= clone https://github.com/<tu-organizacion>/debian13-baseline.git /opt/debian13-baseline
 cd /opt/debian13-baseline
 ```
 
@@ -84,7 +84,7 @@ systemctl list-timers --all --no-pager
 sudo needrestart -r l
 ```
 
-La referencia AIDE debe inicializarse por clon después de personalizarlo y validar su estado, según capítulo 9. No reemplazarla automáticamente para silenciar diferencias. Los avisos de contraseñas del quinto año son locales; recepción central pendiente de agentes. Los registros pueden incluir IP/usuarios: mantenerlos fuera de Git.
+La referencia AIDE debe inicializarse en cada servidor después de configurar sus servicios y validar su estado, según capítulo 4. No reemplazarla automáticamente para silenciar diferencias. Los avisos de contraseñas del quinto año son locales; recepción central pendiente de agentes. Los registros pueden incluir IP/usuarios: mantenerlos fuera de Git.
 
 ## Recuperación: efecto de cada comando
 
@@ -109,10 +109,10 @@ Los parámetros internos `--cargar` y `--vencer` del firewall son para el servic
 | `/etc/cron.daily/baseline-password-review` | Revisión informativa de antigüedad |
 | Configuración baseline bajo `/etc` | Políticas SSH/PAM, audit, logs, APT, sysctl y servicios |
 
-**No borrar todo `/var/lib/debian13-baseline` como si fuera caché.** La selección de respaldos retirables se hace durante el sellado, conservando el estado y código activo. No borrar el usuario administrativo antes de probar SSH y sudo con su reemplazo o disponer del procedimiento de acceso por consola.
+**No borrar todo `/var/lib/debian13-baseline` como si fuera caché.** Contiene estado y registros del endurecimiento. No borrar el usuario administrativo antes de probar SSH y sudo con su reemplazo.
 
 ## Alcance y entrega
 
-El sellado técnico tiene comandos propios, documentados en el [capítulo 14](14-preparar-sellado-manual.md): `sudo python3 bin/sellar_identidad.py --comprobar` y, únicamente al terminar la preparación, `sudo python3 bin/sellar_identidad.py --sellar-y-apagar`. El segundo elimina identidades y apaga la VM. No es un comando de mantenimiento de servidores productivos.
+La verificación previa a producción se detalla en el [capítulo 14](14-preparar-sellado-manual.md).
 
-Los verificadores compartidos por el operador pasaron después de reinicios. Las pruebas funcionales completas, la evaluación CIS por ID y el sellado manual no están todos concluidos. Ver [13. Cierre pendiente](13-cierre-pendiente.md). No etiquetar esta imagen como CIS certificada ni ya aprobada para producción.
+Los verificadores ejecutados confirman que los controles de la Parte 1 pasaron tras los reinicios. La entrega a producción requiere completar la Parte 2 (servicios y agentes). Ver [13. Cierre y verificación](13-cierre-pendiente.md).

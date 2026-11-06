@@ -1,8 +1,8 @@
 # 5. Registrar agentes por servidor
 
-**Objetivo:** que cada clon aparezca una sola vez, con identidad propia, en las consolas de seguridad y monitoreo.
+**Objetivo:** que cada servidor aparezca una sola vez, con identidad propia, en las consolas de seguridad y monitoreo.
 
-**Dónde:** clon con nombre/IP definitivos, todavía aislado del tráfico productivo.
+**Dónde:** Servidor con nombre/IP definitivos, todavía aislado del tráfico productivo.
 
 ## 5.1 Orden y compatibilidad
 
@@ -22,7 +22,7 @@ dpkg-query -W -f='${Package}\t${Version}\n' > /tmp/paquetes-piloto.txt
 
 ## 5.2 Wazuh
 
-Usa **Deploy new agent / Desplegar nuevo agente** en tu consola Wazuh. Selecciona Debian/Linux, arquitectura correcta, manager, nombre único y grupo del perfil. Revisa el comando generado antes de ejecutarlo en el clon; las opciones de enrollment dependen de la configuración institucional.
+Usa **Deploy new agent / Desplegar nuevo agente** en tu consola Wazuh. Selecciona Debian/Linux, arquitectura correcta, manager, nombre único y grupo del perfil. Revisa el comando generado antes de ejecutarlo en el servidor; las opciones de enrollment dependen de la configuración institucional.
 
 Procedimiento oficial: [instalación del agente Linux](https://documentation.wazuh.com/current/installation-guide/wazuh-agent/wazuh-agent-package-linux.html).
 
@@ -55,10 +55,10 @@ Ejecuta esa generación **una sola vez** por alta: repetirla cambia el secreto y
 Adapta el archivo principal `/etc/zabbix/zabbix_agent2.conf`, evitando definiciones duplicadas en sus includes:
 
 ```ini
-Hostname=FQDN_REAL_DEL_CLON
+Hostname=FQDN_REAL_DEL_SERVIDOR
 ServerActive=DNS_REAL_DEL_SERVIDOR_O_PROXY:10051
 TLSConnect=psk
-TLSPSKIdentity=IDENTIDAD_UNICA_DEL_CLON
+TLSPSKIdentity=IDENTIDAD_UNICA_DEL_SERVIDOR
 TLSPSKFile=/etc/zabbix/zabbix_agent2.psk
 ```
 

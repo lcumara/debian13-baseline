@@ -1,91 +1,84 @@
-# 1. Preparar el laboratorio
+# 1. Preparación del Servidor
 
-**Objetivo:** disponer de una VM recuperable antes de aplicar seguridad.
+**Objetivo:** Disponer de un servidor Debian 13 limpio y verificable antes de aplicar la línea base de seguridad.
 
-**Dónde:** Proxmox para crear la VM; Debian para ejecutar los comandos Linux.
+**Dónde:** Servidor Debian 13 (físico o virtual), ejecutando como usuario no root con privilegios `sudo`.
 
-## 1.1 Crear la VM
+---
 
-En Proxmox crea una VM Debian 13 mínima, sin escritorio, en una red de pruebas. Instala OpenSSH y un usuario administrador con sudo. Usa una ISO oficial verificada o una imagen cloud oficial verificada. No uses una copia de un servidor con datos o agentes productivos.
+## 1.1 Requisitos Previos
 
-Conserva acceso a la consola de Proxmox. El tamaño de disco/RAM debe representar el servicio piloto; no hay un tamaño universal para todas las bases de datos y aplicaciones.
+El servidor debe contar con una instalación limpia de Debian 13 (Trixie) mínima, sin entorno gráfico de escritorio, con conectividad de red y acceso SSH inicial.
 
-Registra estos datos fuera de Git:
+Registra los parámetros operativos del servidor fuera de Git:
 
-| Dato | Ejemplo ficticio |
+| Dato | Ejemplo |
 |---|---|
-| VMID y nombre de laboratorio | 9100 / deb13-lab |
-| Usuario administrativo | operador |
-| IP/CIDR, gateway, DNS y NTP | Los de tu red de pruebas |
-| Red administrativa autorizada | La de tu VPN o salto administrativo |
-| Perfil del futuro clon | Aplicación, base de datos, proxy o Docker |
-| Recuperación | Acceso a consola y snapshot/respaldo probado |
+| Hostname / FQDN | `srv-proxy01.ejemplo.local` |
+| Usuario administrativo | `operador` |
+| IP/CIDR, Gateway y DNS | Los asignados a la interfaz de red |
+| Red administrativa autorizada | Subred de administración / VPN |
+| Rol asignado | Proxy Frontend, Proxy Backend, etc. |
+| Mecanismo de recuperación | Respaldo / Snapshot previo de la máquina |
 
-## 1.2 Confirmar el sistema
+---
 
-En la VM:
+## 1.2 Confirmar el Sistema Operativo
+
+En la terminal del servidor:
 
 ```bash
 cat /etc/os-release
-systemd-detect-virt --vm
 uname -r
 sudo -v
 ip -br address
 ip route
 ```
 
-**Esperado:** Debian 13, KVM/QEMU, red de laboratorio y sudo funcional. El ejecutor rechaza Windows, otras versiones y el host Proxmox.
+**Esperado:** Debian GNU/Linux 13 (trixie), arquitectura x86_64, red operativa y sudo funcional.
 
-## 1.3 Llevar el repositorio a la VM
+---
 
-Para la plantilla, descarga el ZIP desde GitHub en tu PC autenticada y transfiérelo con SCP. Así no guardas credenciales de GitHub dentro de la imagen.
+## 1.3 Transferir el Repositorio al Servidor
 
-En PowerShell, ajusta ruta, usuario e IP:
+Para evitar dejar tokens o credenciales de Git en servidores en proceso de endurecimiento, puedes transferir una copia del repositorio mediante SCP desde tu estación de trabajo o clonarlo de forma segura:
 
+Desde PowerShell (Windows):
 ```powershell
-scp "$env:USERPROFILE\Downloads\debian13-baseline-main.zip" operador@IP_LAB:/tmp/baseline.zip
+scp -r "C:\ruta\debian13-baseline" usuario@IP_SERVIDOR:~/debian13-baseline
 ```
 
-En Debian:
-
+O clonando con credenciales temporales en el servidor:
 ```bash
-sudo apt-get update
-sudo apt-get install --no-remove python3 unzip
-mkdir -p ~/trabajo
-unzip /tmp/baseline.zip -d ~/trabajo
-cd ~/trabajo/debian13-baseline-main
-python3 bin/baseline.py paquetes
+git clone https://github.com/<tu-organizacion>/debian13-baseline.git ~/debian13-baseline
+cd ~/debian13-baseline
 ```
 
-**Esperado:** aparece un PLAN; todavía no instala nada. Los comandos posteriores parten de esta carpeta. La IP `IP_LAB` es un dato a sustituir, no un nombre real.
+---
 
-## 1.4 Actualizar y tomar referencia
+## 1.4 Actualizar el Sistema y Verificar Estado Inicial
+
+Antes de aplicar controles, actualiza el índice de paquetes y el sistema:
 
 ```bash
-sudo apt-get update
-sudo apt-get -s upgrade
+sudo apt update
+sudo apt upgrade -y
+sudo apt autoremove --purge -y
 ```
 
-Revisa lo que propone APT. Después, en esta VM de laboratorio:
+Recoge el estado inicial del sistema con la herramienta de auditoría de solo lectura:
 
 ```bash
-sudo apt-get upgrade
-sudo reboot
-```
-
-Reconecta y recoge el estado inicial:
-
-```bash
-cd ~/trabajo/debian13-baseline-main
+cd ~/debian13-baseline
 sudo python3 bin/auditar.py --recopilar --salida /root
 ```
 
-La ausencia de agentes o utilidades puede devolver código 2: lee el informe; no significa automáticamente una vulnerabilidad. Guarda esa carpeta como evidencia privada.
+Guarda ese informe como evidencia de partida del servidor.
 
-## 1.5 Crear el punto de recuperación
+---
 
-En Proxmox, con la VM detenida, crea un snapshot llamado `antes-baseline`. Si el almacenamiento no admite snapshots, utiliza un respaldo y ensaya su restauración en otra VM aislada. El ejecutor pide el nombre como registro; **no comprueba que el snapshot exista**.
+## 1.5 Crear Punto de Recuperación
 
-Vuelve a encender la VM. Continúa con [2. Seguridad base](02-base.md).
+Antes de aplicar cambios en PAM, kernel o firewall, genera un punto de respaldo o snapshot del servidor en la plataforma de virtualización correspondiente.
 
-**Si falla:** detén el avance. Resuelve red, sudo y recuperación antes de aplicar cambios. Un snapshot del sistema no sustituye un respaldo consistente de una BD productiva.
+Una vez asegurada la recuperación, continúa con la **Parte 1: [2. Instalar y Comprobar la Seguridad Base](02-base.md)** o directamente mediante la ejecución automatizada en bloque con **[9. Base en Bloque](09-base-en-bloque.md)**.
