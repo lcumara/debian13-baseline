@@ -6,7 +6,8 @@
 
 - Caducidad de contraseña de 3650 días, aviso 365 días antes y sin bloqueo adicional por inactividad. Revisión local desde 1825 días. No declarar conformidad CIS de caducidad por aprobar la política local.
 - Conservar distribución de volúmenes actual; no separar /home, /var/tmp, /var/log ni /var/log/audit.
-- Mantener SSH con contraseña; sin forwarding; root sin acceso SSH. No convertir esta decisión automáticamente en un hallazgo CIS sin contrastar el control exacto.
+- Mantener SSH con contraseña o llave según perfil; sin forwarding; root sin acceso SSH.
+- Firewall: Estandarizado en UFW (con backend nativo `iptables-nft`), IPv6 desactivado y Fail2ban enlazado (`banaction = ufw`).
 
 ## Trabajo técnico de cierre todavía no implementado o validado
 

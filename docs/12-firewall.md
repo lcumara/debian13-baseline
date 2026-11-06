@@ -1,96 +1,115 @@
-# 12. Firewall de entrada de la plantilla
+# 12. Firewall del Host con UFW y Fail2ban
 
-**Objetivo:** denegar entrada no autorizada al host IPv4/IPv6, conservando SSH/22 y las tablas de Fail2ban. Perfil inicial con SSH como único servicio publicado.
+> **Actualización v0.4:** El proyecto estandariza el uso de **UFW** (con backend nativo `iptables-nft`), manteniendo `/etc/nftables.conf` en configuración limpia por defecto y vinculando las acciones de baneo de **Fail2ban** directamente con UFW en IPv4. Se reemplaza el ejecutor anterior `firewall_base.py` por la gestión nativa del paquete del sistema.
 
-## Aplicar
+**Objetivo:** Establecer una política de firewall sencilla, robusta y estandarizada en Debian 13 (Trixie), denegando entrada no autorizada y conservando SSH/22 coordinado con Fail2ban.
 
-```bash
-cd ~/trabajo/debian13-baseline
-git -c credential.helper= pull --ff-only
-sudo python3 bin/firewall_base.py --aplicar
+---
+
+## 1. Arquitectura y Fundamentos
+
+1. **UFW sobre `nf_tables`:** En Debian 13, UFW opera sobre el subsistema moderno `nf_tables` del kernel Linux a través de la capa `iptables-nft`, garantizando alto rendimiento y control perimetral sin scripts propietarios.
+2. **Coexistencia con `nftables`:** Mantener `/etc/nftables.conf` con las tablas limpias por defecto evita colisiones de reglas y previene que un reinicio de `nftables` borre las cadenas de UFW.
+3. **Gestión de ataques con Fail2ban:** Con `banaction = ufw`, cualquier IP que acumule intentos fallidos de autenticación SSH es bloqueada directamente en UFW y visible con `sudo ufw status`.
+
+---
+
+## 2. Procedimiento de Configuración Paso a Paso
+
+### 2.1 Restaurar `nftables.conf` al estándar limpio
+Asegurar que `/etc/nftables.conf` contenga únicamente la tabla base oficial de Debian:
+
+```nft
+#!/usr/sbin/nft -f
+
+flush ruleset
+
+table inet filter {
+	chain input {
+		type filter hook input priority filter;
+	}
+	chain forward {
+		type filter hook forward priority filter;
+	}
+	chain output {
+		type filter hook output priority filter;
+	}
+}
 ```
 
-Mantén abierta la sesión. Abre **otra conexión SSH** y, desde ella, confirma antes de 20 minutos:
-
+Aplicar y activar:
 ```bash
-sudo -v
-cd ~/trabajo/debian13-baseline
-sudo python3 bin/firewall_base.py --confirmar
-sudo python3 bin/firewall_base.py --verificar
-sudo fail2ban-client status sshd
+sudo systemctl restart nftables
 ```
 
-Sin confirmación, el timer retira únicamente la tabla propia y deshabilita el servicio propio. No reiniciar antes de confirmar: el timer es transitorio. La persistencia se habilita después de confirmar el acceso.
-
-## Política
-
-- Tabla propia `inet baseline_host`, cadena INPUT con política drop.
-- Permite loopback, conexiones establecidas/relacionadas, ICMP/ICMPv6 (incluye diagnóstico y control de red), respuestas DHCPv4/v6 y nuevas conexiones SSH TCP/22.
-- Descarta origen loopback recibido por otra interfaz y estados inválidos.
-- SSH permitido desde cualquier origen; la restricción a redes administrativas se define por clon sin publicar IP en Git.
-- No borra ni guarda las tablas dinámicas de Fail2ban. No utiliza `flush ruleset`.
-- Salida sin restricciones adicionales. No crea cadena FORWARD ni afirma proteger puertos publicados por Docker. Estos son límites expresos respecto de una política CIS completa.
-
-El servicio propio es `baseline-firewall.service`; no habilitar además nftables.service con su configuración genérica, que puede borrar tablas ajenas. El código de arranque y su estado quedan bajo `/var/lib/debian13-baseline/firewall-*`, root:root y privado. **No borrar ese directorio al limpiar la plantilla**: contiene el ejecutor requerido por systemd, no solo un respaldo. Las reglas no contienen identidades ni IP propias del servidor.
-
-Después de confirmar puedes reiniciar y repetir la verificación. Prueba desde otra máquina autorizada que SSH funciona y que un puerto temporal con un servicio realmente escuchando resulta bloqueado; un puerto sin servicio no demuestra filtrado. Esa prueba externa no está automatizada aquí. Las pruebas locales del repositorio son simuladas; `nft -c` se ejecuta en la VM antes de activar reglas.
-
-## Recuperar
-
-## Abrir servicios después de clonar
-
-Actualiza el repositorio del clon. No repitas `--aplicar`: el firewall ya existe.
-
+### 2.2 Instalar UFW y desactivar IPv6
 ```bash
-cd ~/trabajo/debian13-baseline
-git -c credential.helper= pull --ff-only
+sudo apt update && sudo apt install -y ufw
+sudo sed -i 's/IPV6=yes/IPV6=no/' /etc/default/ufw
 ```
 
-Ejemplos: ejecutar solo los correspondientes a servicios reales. HTTPS público en IPv4 e IPv6:
-
+### 2.3 Políticas Base y SSH
 ```bash
-sudo python3 bin/firewall_base.py --permitir-tcp 443 --origen cualquiera
+sudo ufw default deny incoming
+sudo ufw default allow outgoing
+sudo ufw allow 22/tcp comment "SSH Administrativo"
+sudo ufw --force enable
 ```
 
-HTTP, si el despliegue lo requiere (redirección o validación de certificados):
-
-```bash
-sudo python3 bin/firewall_base.py --permitir-tcp 80 --origen cualquiera
+### 2.4 Integración de Fail2ban
+En `/etc/fail2ban/jail.d/90-baseline-sshd.local`:
+```ini
+[sshd]
+enabled = true
+backend = systemd
+port = 22
+filter = sshd
+maxretry = 5
+findtime = 10m
+bantime = 10m
+usedns = no
+banaction = ufw
 ```
 
-PostgreSQL, únicamente desde la IP de la aplicación. El dato se introduce localmente, no se comparte en el chat:
-
+Reiniciar Fail2ban:
 ```bash
-read -r -p 'IP o red CIDR autorizada de la aplicación: ' RED_APP
-sudo python3 bin/firewall_base.py --permitir-tcp 5432 --origen "$RED_APP"
+sudo systemctl restart fail2ban
 ```
 
-Usar 3306 para MySQL/MariaDB si corresponde. Una IP IPv4 autoriza únicamente esa familia; para IPv6 añadir su IP/red explícitamente. Los permisos son acumulativos: agregar un origen restringido no elimina un permiso previo para `cualquiera`.
+---
 
-Para retirar exactamente un permiso:
+## 3. Comprobaciones
 
-```bash
-sudo python3 bin/firewall_base.py --cerrar-tcp 5432 --origen "$RED_APP"
-sudo python3 bin/firewall_base.py --verificar
-sudo nft list table inet baseline_host
-```
+1. **Acción de Fail2ban vinculada a UFW:**
+   ```bash
+   sudo fail2ban-client get sshd actions
+   # Salida esperada: ufw
+   ```
 
-Las conexiones ya establecidas pueden seguir hasta cerrarse. Estos comandos no permiten modificar SSH/22. Guardan permisos de forma privada en el estado y actualizan el ejecutor de arranque; comprueban sintaxis y reemplazan solo la tabla propia mediante una transacción nft. El verificador comprueba presencia del puerto, no prueba exhaustivamente origen/destino; comprobar desde un origen permitido y otro no permitido y después de reiniciar. Al producirse un error se intenta restaurar la política previa.
+2. **Estado del firewall:**
+   ```bash
+   sudo ufw status verbose
+   ```
 
-Abrir el firewall no instala el servicio ni configura autenticación, TLS o la interfaz de escucha de la base de datos. Si aplicación y base se comunican por localhost o socket Unix, no abras el puerto de la base a la red. Los backends detrás de un proxy local tampoco necesitan un puerto público propio.
+---
 
-**Docker:** estos permisos cubren INPUT del host. Un puerto publicado por Docker normalmente utiliza FORWARD y sus reglas propias; no asumir que este bloqueo lo protege. Para un backend accesible solo por un proxy local, publicar explícitamente en loopback, por ejemplo `127.0.0.1:8080:8080`, y verificar el despliegue real. Las bases entre contenedores pueden usar una red interna sin publicar el puerto al host. El perfil Docker completo sigue pendiente.
+## 4. Gestión de Servicios por Función (Frontend y Backend)
 
-## Recuperación del firewall completo
+* **Proxy Frontend (Web público):**
+  ```bash
+  sudo ufw allow 443/tcp comment "HTTPS Nginx"
+  # 80/tcp solo si se requiere redirección
+  sudo ufw allow 80/tcp comment "HTTP Nginx"
+  ```
 
-```bash
-sudo python3 bin/firewall_base.py --restaurar
-```
+* **Proxy Backend (Restringido solo al Frontend):**
+  ```bash
+  sudo ufw allow from <IP_FRONTEND> to any port 80 proto tcp comment "HTTP desde Frontend"
+  sudo ufw allow from <IP_FRONTEND> to any port 443 proto tcp comment "HTTPS desde Frontend"
+  ```
 
-Retira la tabla propia y deshabilita el servicio; deja los archivos para diagnóstico. El aplicador rechaza sobreescribir un servicio o tabla ya existentes. Si se restauró, revisar el registro antes de preparar otra aplicación; no repetir borrando archivos a ciegas.
-
-## Estado de cierre
-
-Esta etapa termina la implementación del firewall de entrada del host. **No termina CIS completo ni el sellado.** Continúan pendientes opciones de montaje, revisión de módulos y arranque, controles restantes de auditoría/cuentas, pruebas funcionales de PAM, evaluación por ID, agentes y regeneración de identidades. Las excepciones de contraseña y separación de particiones constan en el capítulo 11.
-
-Fuentes: [nftables](https://netfilter.org/projects/nftables/manpage.html), [Docker y nftables](https://docs.docker.com/engine/network/firewall-nftables/).
+* **Eliminar una regla:**
+  ```bash
+  sudo ufw status numbered
+  sudo ufw delete <número_regla>
+  ```

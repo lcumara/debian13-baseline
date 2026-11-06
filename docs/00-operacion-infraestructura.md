@@ -35,38 +35,38 @@ systemctl --failed
 
 La primera consulta requiere una sesión SSH con usuario no root. Los verificadores comprueban controles concretos; no son un escáner CIS completo.
 
-## Firewall
+## Firewall (UFW)
+
+El firewall del host se administra mediante **UFW** (backend `iptables-nft`), con IPv6 desactivado y Fail2ban enlazado:
 
 ```bash
-sudo python3 bin/firewall_base.py --verificar
-sudo nft list table inet baseline_host
-sudo systemctl status baseline-firewall.service --no-pager
-sudo journalctl -u baseline-firewall.service -b --no-pager
+sudo ufw status verbose
 sudo fail2ban-client status sshd
 ```
 
-Abrir HTTPS público, solo en el clon que lo necesite:
-
+Abrir HTTPS público (puerto 443 TCP):
 ```bash
-sudo python3 bin/firewall_base.py --permitir-tcp 443 --origen cualquiera
+sudo ufw allow 443/tcp comment "HTTPS Web"
 ```
 
-Abrir PostgreSQL solo desde la aplicación (introducir IP/CIDR localmente):
+Abrir HTTP (puerto 80 TCP, solo si se requiere redirección):
+```bash
+sudo ufw allow 80/tcp comment "HTTP Redireccion"
+```
 
+Abrir un puerto restringido solo a una IP o subred de aplicación (ej. PostgreSQL 5432):
 ```bash
 read -r -p 'IP o CIDR autorizado: ' RED_APP
-sudo python3 bin/firewall_base.py --permitir-tcp 5432 --origen "$RED_APP"
+sudo ufw allow from "$RED_APP" to any port 5432 proto tcp comment "PostgreSQL App"
 ```
 
 Retirar ese permiso exacto:
-
 ```bash
-sudo python3 bin/firewall_base.py --cerrar-tcp 5432 --origen "$RED_APP"
+sudo ufw status numbered
+sudo ufw delete <NUMERO_DE_REGLA>
 ```
 
-Usar 3306 si el servicio es MySQL/MariaDB. Abrir un puerto no instala/configura el servicio ni su autenticación/TLS. Los permisos se acumulan: un permiso restringido no elimina uno anterior para `cualquiera`. Las conexiones existentes no se cortan al retirar el permiso.
-
-No repetir `--aplicar` sobre un firewall existente. No ejecutar `nft flush ruleset`, no guardar las tablas dinámicas de Fail2ban como configuración estática y no habilitar otro gestor que sobrescriba las reglas. Los cambios directos con nft son posibles, pero el ejecutor vuelve a cargar la política guardada al reiniciar. Docker publicado necesita el perfil de forwarding propio; consultar [12. Firewall](12-firewall.md).
+Para más detalles sobre la arquitectura del firewall, consulta [12. Firewall UFW](12-firewall-ufw.md).
 
 ## Registros, auditoría, contraseñas e integridad
 

@@ -10,7 +10,7 @@
 
 Para una instalación nueva desde cero, empieza por [1. Preparar el laboratorio](docs/01-laboratorio.md).
 
-> Edición 0.3: perfil general agrupado. Algunos controles se probaron manualmente en la VM con el usuario; el nuevo ejecutor completo tiene pruebas locales simuladas y necesita validación en Debian. No es una implementación CIS completa ni una imagen ya sellada.
+> Edición 0.4: estandarización de Firewall con UFW integrado a Fail2ban, soporte para arquitecturas de Proxy (Frontend/Backend) y guía de mantenimiento de parches.
 
 ## El recorrido
 
@@ -40,9 +40,10 @@ flowchart LR
 | [9. Base en bloque](docs/09-base-en-bloque.md) | Aplicar el perfil con contraseña, sin Chrony ni snapshot ficticio, y comprobar al final |
 | [10. Completar controles](docs/10-completar-base.md) | PAM local, historial y bloqueo, rsyslog, needrestart, auditoría y restricciones adicionales |
 | [11. Cuentas y cron](docs/11-cuentas-tareas.md) | Política para cuentas nuevas y permisos de cron, con recuperación |
-| [12. Firewall](docs/12-firewall.md) | Entrada IPv4/IPv6 con SSH/22 y recuperación temporal |
+| [12. Firewall](docs/12-firewall.md) | UFW nativo con Fail2ban, IPv6 desactivado y reglas por función |
 | [13. Cierre pendiente](docs/13-cierre-pendiente.md) | Lista consolidada de lo que falta, excepciones y trabajo por clon |
 | [14. Preparación de sellado manual](docs/14-preparar-sellado-manual.md) | Comprobaciones antes de limpiar identidades y preparar clones |
+| [15. Mantenimiento y Parches](docs/guia-mantenimiento-parches-debian.md) | Buenas prácticas de actualización, kernels y mitigación de vulnerabilidades |
 
 Cada capítulo indica **objetivo, dónde ejecutar, comandos, resultado esperado y qué hacer si falla**. Los nombres `IP_LAB`, `IP_ADMIN`, `FQDN_REAL...` son datos que debes sustituir.
 
