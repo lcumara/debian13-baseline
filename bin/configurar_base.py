@@ -15,7 +15,7 @@ import baseline as core
 PACKAGES = (
     "ca-certificates", "sudo", "qemu-guest-agent", "apparmor", "apparmor-utils",
     "auditd", "audispd-plugins", "aide", "unattended-upgrades",
-    "debian-security-support", "fail2ban", "python3-systemd", "nftables", "logrotate",
+    "debian-security-support", "fail2ban", "python3-systemd", "nftables", "ufw", "logrotate",
 )
 SSH_MAIN = Path("/etc/ssh/sshd_config")
 SSH_DROP = Path("/etc/ssh/sshd_config.d/00-baseline-password.conf")
@@ -260,7 +260,7 @@ maxretry = 5
 findtime = 10m
 bantime = 10m
 usedns = no
-banaction = nftables
+banaction = ufw
 """
     try:
         put(folder, state, "/etc/fail2ban/jail.d/90-baseline-sshd.local", config, "fail2ban")
@@ -440,7 +440,7 @@ def verify(args):
     check("audit_reglas", ["auditctl", "-l"], lambda out: all(k in out for k in ("identidad", "privilegios", "acceso_ssh", "autenticacion", "config_audit", "config_kernel", "servicios")))
     for key, expected in (("maxretry", "5"), ("findtime", "600"), ("bantime", "600")):
         check("fail2ban_" + key, ["fail2ban-client", "get", "sshd", key], lambda out, val=expected: out.strip() == val)
-    check("fail2ban_accion", ["fail2ban-client", "get", "sshd", "actions"], lambda out: "nftables" in out)
+    check("fail2ban_accion", ["fail2ban-client", "get", "sshd", "actions"], lambda out: "ufw" in out)
     check("aide_sintaxis", ["aide", "--config=/etc/aide/baseline.conf", "--config-check"])
     journal_values = {"Storage": "persistent", "SystemMaxUse": "512M", "SystemKeepFree": "1G",
                       "RuntimeMaxUse": "64M", "MaxRetentionSec": "30day"}

@@ -1,5 +1,13 @@
 # Cambios y validación
 
+## 0.4 — 06/11/2026 — Soporte UFW e integración Fail2ban
+
+- Estandarización de Firewall: reemplazo de `firewall_base.py` por **UFW** (usando backend `iptables-nft`), manteniendo `nftables.conf` en configuración limpia por defecto.
+- Configuración de Fail2ban con `banaction = ufw` en `bin/configurar_base.py`, integrando el bloqueo de ataques SSH directamente en las reglas de UFW.
+- Desactivación de IPv6 en UFW (`IPV6=no`) para concentrar la administración perimetral exclusivamente en IPv4.
+- Incorporación de paquete `ufw` en la lista de paquetes base de `configurar_base.py`.
+- Nueva guía operativa: `docs/12-firewall-ufw.md` con procedimiento de despliegue y reglas específicas para arquitectura Frontend y Backend (Nginx).
+
 ## 0.3 — 18/10/2026 — Perfil general agrupado
 
 - Nuevo `bin/configurar_base.py` y capítulo 9: configuración por etapas, verificación final y registro explícito de ausencia de snapshot.
